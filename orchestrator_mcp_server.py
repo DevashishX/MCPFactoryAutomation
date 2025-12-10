@@ -1,7 +1,7 @@
 """
-MCP Server for Block Sequence Application
+MCP Server for PCB Assembly Orchestrator
 
-This server exposes the block manipulation functions to Claude via MCP protocol.
+This server exposes the orchestrator manipulation functions to Claude via MCP protocol.
 """
 
 import asyncio
@@ -12,18 +12,18 @@ from mcp.server import NotificationOptions, Server
 import mcp.server.stdio
 
 # Import the GUI application
-from block_sequence_app import BlockSequenceApp
+from orchestrator_gui import OrchestratorApp
 
 # Global app instance
 app_instance = None
 
 # Create MCP server
-server = Server("block-sequence-server")
+server = Server("orchestrator-server")
 
 def start_gui_thread():
     """Start the GUI in a separate thread"""
     global app_instance
-    app_instance = BlockSequenceApp()
+    app_instance = OrchestratorApp()
     app_instance.run()
 
 # Start GUI in background thread when server starts
@@ -36,78 +36,11 @@ time.sleep(1)
 
 @server.list_tools()
 async def handle_list_tools() -> list[types.Tool]:
-    """List all available tools for block manipulation"""
+    """List all available tools for orchestrator manipulation"""
     return [
         types.Tool(
-            name="swap_blocks",
-            description="Swap two blocks at specified positions (0-4)",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "pos1": {
-                        "type": "integer",
-                        "description": "First position (0-4)",
-                        "minimum": 0,
-                        "maximum": 4
-                    },
-                    "pos2": {
-                        "type": "integer",
-                        "description": "Second position (0-4)",
-                        "minimum": 0,
-                        "maximum": 4
-                    }
-                },
-                "required": ["pos1", "pos2"]
-            }
-        ),
-        types.Tool(
-            name="set_block_color",
-            description="Change the color of a block at a specific position",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "pos": {
-                        "type": "integer",
-                        "description": "Position (0-4)",
-                        "minimum": 0,
-                        "maximum": 4
-                    },
-                    "color": {
-                        "type": "string",
-                        "description": "Color name",
-                        "enum": ["blue", "green", "red", "yellow", "purple", "gray"]
-                    }
-                },
-                "required": ["pos", "color"]
-            }
-        ),
-        types.Tool(
-            name="rotate_left",
-            description="Rotate the entire sequence one position to the left",
-            inputSchema={
-                "type": "object",
-                "properties": {}
-            }
-        ),
-        types.Tool(
-            name="rotate_right",
-            description="Rotate the entire sequence one position to the right",
-            inputSchema={
-                "type": "object",
-                "properties": {}
-            }
-        ),
-        types.Tool(
-            name="reverse_sequence",
-            description="Reverse the order of all blocks in the sequence",
-            inputSchema={
-                "type": "object",
-                "properties": {}
-            }
-        ),
-        types.Tool(
             name="set_block_at_position",
-            description="Set a specific block type (A-E) at a given position",
+            description="Set a specific block type at a given position (0-4). Valid blocks: 'Solder Paste Application', 'Component Placement', 'Soldering', 'Optical Inspection', 'Functional Testing'",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -119,24 +52,60 @@ async def handle_list_tools() -> list[types.Tool]:
                     },
                     "block_type": {
                         "type": "string",
-                        "description": "Block type letter",
-                        "enum": ["A", "B", "C", "D", "E"]
+                        "description": "Block type name",
+                        "enum": ["Solder Paste Application", "Component Placement", "Soldering", "Optical Inspection", "Functional Testing"]
                     }
                 },
                 "required": ["pos", "block_type"]
             }
         ),
         types.Tool(
+            name="set_sub_param_at_position",
+            description="Set a sub-parameter at a given position (0-4). Valid sub-params depend on the block type at that position.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "pos": {
+                        "type": "integer",
+                        "description": "Position (0-4)",
+                        "minimum": 0,
+                        "maximum": 4
+                    },
+                    "sub_param": {
+                        "type": "string",
+                        "description": "Sub-parameter value (e.g., 'lead-free', 'high-speed', '235C', '2D', 'in-circuit')"
+                    }
+                },
+                "required": ["pos", "sub_param"]
+            }
+        ),
+        types.Tool(
             name="get_current_sequence",
-            description="Get the current state of the block sequence and validation status",
+            description="Get the current state of the orchestrator sequence and validation status",
             inputSchema={
                 "type": "object",
                 "properties": {}
             }
         ),
         types.Tool(
-            name="set_to_pattern",
-            description="Reset the sequence to the valid pattern (A->B->C->D->E)",
+            name="execute_sequence",
+            description="Execute the current sequence if it's valid",
+            inputSchema={
+                "type": "object",
+                "properties": {}
+            }
+        ),
+        types.Tool(
+            name="get_current_pattern_validity",
+            description="Check if the current pattern is valid and which pattern it matches",
+            inputSchema={
+                "type": "object",
+                "properties": {}
+            }
+        ),
+        types.Tool(
+            name="get_valid_patterns",
+            description="Get all valid sequence patterns that the orchestrator accepts",
             inputSchema={
                 "type": "object",
                 "properties": {}
@@ -160,29 +129,28 @@ async def handle_call_tool(
     try:
         result = ""
         
-        if name == "swap_blocks":
-            result = app_instance.swap_blocks(arguments["pos1"], arguments["pos2"])
-        
-        elif name == "set_block_color":
-            result = app_instance.set_block_color(arguments["pos"], arguments["color"])
-        
-        elif name == "rotate_left":
-            result = app_instance.rotate_left()
-        
-        elif name == "rotate_right":
-            result = app_instance.rotate_right()
-        
-        elif name == "reverse_sequence":
-            result = app_instance.reverse_sequence()
-        
-        elif name == "set_block_at_position":
+        if name == "set_block_at_position":
             result = app_instance.set_block_at_position(arguments["pos"], arguments["block_type"])
+        
+        elif name == "set_sub_param_at_position":
+            result = app_instance.set_sub_param_at_position(arguments["pos"], arguments["sub_param"])
         
         elif name == "get_current_sequence":
             result = app_instance.get_current_sequence()
         
-        elif name == "set_to_pattern":
-            result = app_instance.set_to_pattern()
+        elif name == "execute_sequence":
+            result = app_instance.post_execute_sequence()
+        
+        elif name == "get_current_pattern_validity":
+            result = app_instance.get_current_pattern_validity()
+        
+        elif name == "get_valid_patterns":
+            patterns = app_instance.get_valid_patterns()
+            result = "Valid Patterns:\n"
+            for idx, pattern in enumerate(patterns, 1):
+                result += f"\nPattern {idx}:\n"
+                for step_idx, (block, param) in enumerate(pattern, 1):
+                    result += f"  Step {step_idx}: {block} ({param})\n"
         
         else:
             result = f"Unknown tool: {name}"
@@ -202,7 +170,7 @@ async def main():
             read_stream,
             write_stream,
             InitializationOptions(
-                server_name="block-sequence",
+                server_name="orchestrator",
                 server_version="0.1.0",
                 capabilities=server.get_capabilities(
                     notification_options=NotificationOptions(),
