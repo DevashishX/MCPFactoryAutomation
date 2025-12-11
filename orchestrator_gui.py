@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from processes import VALID_PROCESSES
 from typing import List, Tuple
 
 class OrchestratorApp:
@@ -25,11 +26,7 @@ class OrchestratorApp:
         }
         
         # Define multiple valid patterns as list of (block, sub_param) tuples
-        self.valid_patterns = [
-            [('Solder Paste Application', 'lead-free'), ('Component Placement', 'high-speed'), ('Soldering', '235C'), ('Optical Inspection', '2D'), ('Functional Testing', 'in-circuit')],
-            [('Solder Paste Application', 'leaded'), ('Component Placement', 'high-precision'), ('Soldering', '245C'), ('Optical Inspection', '3D'), ('Functional Testing', 'functional')],
-            [('Solder Paste Application', 'low-temp'), ('Component Placement', 'flexible'), ('Soldering', '260C'), ('Optical Inspection', 'Automated'), ('Functional Testing', 'boundary-scan')]
-        ]
+        self.valid_processes = VALID_PROCESSES
         
         # Color options - Map each block letter to a color
         self.color_map = {
@@ -177,12 +174,12 @@ class OrchestratorApp:
         self.sequences_textbox.pack(pady=10, padx=10, fill="both", expand=True)
         
         # Populate valid sequences
-        self._populate_valid_sequences()
+        self._populate_valid_processes()
     
-    def _populate_valid_sequences(self):
+    def _populate_valid_processes(self):
         """Populate the textbox with valid sequence patterns"""
         self.sequences_textbox.delete("1.0", "end")
-        for pattern_idx, pattern in enumerate(self.valid_patterns, 1):
+        for pattern_idx, pattern in enumerate(self.valid_processes, 1):
             sequence_text = f"Process {pattern_idx}:\n"
             for step_idx, (block, param) in enumerate(pattern, 1):
                 sequence_text += f"  Step {step_idx}: {block} ({param})\n"
@@ -230,7 +227,7 @@ class OrchestratorApp:
         current_sequence = [(self.blocks[i], self.sub_params[i]) for i in range(5)]
         
         # Check if current sequence matches any valid pattern
-        for pattern_idx, pattern in enumerate(self.valid_patterns, 1):
+        for pattern_idx, pattern in enumerate(self.valid_processes, 1):
             if current_sequence == pattern:
                 self.status_label.configure(
                     text=f"✓ Valid Combination! (Pattern {pattern_idx})",
@@ -249,7 +246,7 @@ class OrchestratorApp:
         current_sequence = [(self.blocks[i], self.sub_params[i]) for i in range(5)]
         
         # Check if sequence matches any valid pattern
-        for pattern_idx, pattern in enumerate(self.valid_patterns, 1):
+        for pattern_idx, pattern in enumerate(self.valid_processes, 1):
             if current_sequence == pattern:
                 self.execution_status_label.configure(
                     text=f"✓ Sequence Executed Successfully! (Pattern {pattern_idx})",
@@ -304,9 +301,9 @@ class OrchestratorApp:
         """Return whether the current pattern is valid or not"""
         return self.check_pattern()
     
-    def get_valid_patterns(self) -> List[List[Tuple[str, str]]]:
+    def get_valid_processes(self) -> List[List[Tuple[str, str]]]:
         """Return the list of valid patterns"""
-        return self.valid_patterns
+        return self.valid_processes
     
     # End of MCP integration methods #
     
