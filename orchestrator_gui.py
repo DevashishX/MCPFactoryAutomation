@@ -4,7 +4,6 @@ from typing import List, Tuple
 
 class OrchestratorApp:
     def __init__(self):
-        # Initialize application
         ctk.set_appearance_mode("light")
         ctk.set_default_color_theme("blue")
         
@@ -12,32 +11,27 @@ class OrchestratorApp:
         self.root.title("PCB Assembly Orchestrator")
         self.root.geometry("900x1200")
         
-        # Block data
-        self.blocks = ['Solder Paste Application', 'Component Placement', 'Soldering', 'Optical Inspection', 'Functional Testing'] # correspond sequentially to color_map
+        self.blocks = ['Solder Paste Application', 'Component Placement', 'Soldering', 'Optical Inspection', 'Testing'] # correspond sequentially to color_map
         self.sub_params = ['lead-free', 'high-speed', '235C', '2D', 'in-circuit']  # Sub-parameters for each block
         
-        # Define block-specific sub-parameters
         self.block_sub_params = {
             'Solder Paste Application': ['lead-free', 'leaded', 'low-temp'],
             'Component Placement': ['high-speed', 'high-precision', 'flexible'],
             'Soldering': ['235C', '245C', '260C'],
             'Optical Inspection': ['2D', '3D', 'Automated'],
-            'Functional Testing': ['in-circuit', 'functional', 'boundary-scan']
+            'Testing': ['in-circuit', 'functional', 'boundary-scan']
         }
         
-        # Define multiple valid processs as list of (block, sub_param) tuples
         self.valid_processes = VALID_PROCESSES
         
-        # Color options - Map each block letter to a color
         self.color_map = {
             'Solder Paste Application': '#3b82f6',  # blue
             'Component Placement': "#84f1ed",  # teal
             'Soldering': '#eab308',  # yellow
             'Optical Inspection': '#a855f7',  # purple
-            'Functional Testing': '#22c55e'   # green
+            'Testing': '#22c55e'   # green
         }
         
-        # GUI elements
         self.block_labels = []
         self.sub_param_labels = []
         self.dropdowns = []
@@ -54,7 +48,6 @@ class OrchestratorApp:
         main_frame = ctk.CTkFrame(self.root)
         main_frame.pack(pady=20, padx=20, fill="both", expand=True)
         
-        # Title
         title = ctk.CTkLabel(main_frame, text="Orchestrator for PCB Assembly", 
                             font=ctk.CTkFont(size=24, weight="bold"))
         title.pack(pady=(0, 20))
@@ -137,7 +130,7 @@ class OrchestratorApp:
             
             # Dropdown for block type
             dropdown = ctk.CTkComboBox(control_container, 
-                                      values=['Solder Paste Application', 'Component Placement', 'Soldering', 'Optical Inspection', 'Functional Testing'],
+                                      values=['Solder Paste Application', 'Component Placement', 'Soldering', 'Optical Inspection', 'Testing'],
                                       width=120,
                                       command=lambda value, pos=i: self.set_block_at_position(pos, value))
             dropdown.set(self.blocks[i])
@@ -185,8 +178,7 @@ class OrchestratorApp:
         #         sequence_text += f"  Step {step_idx}: {block} ({param})\n"
         #     sequence_text += "\n"
         #     self.sequences_textbox.insert("end", sequence_text)
-        # read D:\DevMAT\documents\all_processes_overview.txt and display its content
-        with open("D:/DevMAT/documents/all_processes_overview.txt", "r") as f:
+        with open("D:/MCPFactoryAutomation/documents/all_processes_overview.txt", "r") as f:
             content = f.read()
             content = content.replace("*", "")
             
@@ -272,10 +264,9 @@ class OrchestratorApp:
        
     def set_block_at_position(self, pos: int, block_type: str) -> str:
         """Set a specific block type at a position"""
-        if 0 <= pos < 5 and block_type in ['Solder Paste Application', 'Component Placement', 'Soldering', 'Optical Inspection', 'Functional Testing']:
+        if 0 <= pos < 5 and block_type in ['Solder Paste Application', 'Component Placement', 'Soldering', 'Optical Inspection', 'Testing']:
         # if 0 <= pos < 5 and block_type in self.blocks_sub_params.keys():            
             self.blocks[pos] = block_type
-            # Auto-set to first valid sub-param for this block type
             self.sub_params[pos] = self.block_sub_params[block_type][0]
             self.update_display()
             return f"Set position {pos} to {block_type}. Current: {list(zip(self.blocks, self.sub_params))}"

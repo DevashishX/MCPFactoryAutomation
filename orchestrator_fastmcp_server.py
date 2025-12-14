@@ -1,23 +1,11 @@
-"""
-FastMCP Server for PCB Assembly Orchestrator
-
-This server exposes the orchestrator manipulation functions to Claude via FastMCP.
-More Pythonic implementation using FastMCP framework.
-"""
-
 import threading
 import time
 from typing import List, Tuple
 from mcp.server.fastmcp import FastMCP
 import argparse
 
-# Import the GUI application
 from orchestrator_gui import OrchestratorApp
-
-# Global app instance
 app_instance = None
-
-# Create FastMCP server
 mcp = FastMCP("PCB process Orchestrator", host="127.0.0.1", port=8000)
 
 def start_gui_thread():
@@ -25,11 +13,6 @@ def start_gui_thread():
     global app_instance
     app_instance = OrchestratorApp()
     app_instance.run()
-
-# Start GUI in background thread
-# gui_thread = threading.Thread(target=start_gui_thread, daemon=True)
-# gui_thread.start()
-# time.sleep(1)  # Wait for app to initialize
 
 def ensure_app() -> OrchestratorApp:
     """Ensure app is initialized and return it"""
@@ -45,7 +28,7 @@ def set_block_at_position(pos: int, block_type: str) -> str:
     Args:
         pos: Position (0-4) in the sequence
         block_type: One of: 'Solder Paste Application', 'Component Placement', 
-                    'Soldering', 'Optical Inspection', 'Functional Testing'
+                    'Soldering', 'Optical Inspection', 'Testing'
     
     Returns:
         Status message with current sequence
@@ -65,7 +48,7 @@ def set_sub_param_at_position(pos: int, sub_param: str) -> str:
                   - Component Placement: 'high-speed', 'high-precision', 'flexible'
                   - Soldering: '235C', '245C', '260C'
                   - Optical Inspection: '2D', '3D', 'Automated'
-                  - Functional Testing: 'in-circuit', 'functional', 'boundary-scan'
+                  - Testing: 'in-circuit', 'functional', 'boundary-scan'
     
     Returns:
         Status message with current sequence
@@ -112,7 +95,7 @@ def get_valid_processes() -> str:
     Get all valid process processs that the orchestrator accepts.
     
     Returns:
-        Formatted string listing all 3 valid processs with their steps
+        Formatted string listing all 9 valid processs with their steps
     """
     app = ensure_app()
     processes = app.get_valid_processes()
@@ -129,7 +112,7 @@ def get_valid_processes() -> str:
 @mcp.tool()
 def get_possible_blocks_sub_params() -> str:
     """
-    Use in worst case, Get all possible block types and their valid sub-parameters.
+    Get all possible block types and their valid sub-parameters.
     
     Returns:
         Formatted string listing all block types and their sub-parameters
@@ -164,33 +147,6 @@ def get_block_sub_params(block_type: str) -> str:
     params = app.block_sub_params[block_type]
     return f"Valid sub-parameters for '{block_type}': {params}"
 
-# @mcp.tool()
-# def set_process(process_number: int) -> str:
-#     """
-#     Set the orchestrator to a specific valid process.
-    
-#     Args:
-#         process_number: Process number (1 to 9)
-    
-#     Returns:
-#         Status message indicating the process was set
-#     """
-#     app = ensure_app()
-    
-#     if not 1 <= process_number <= len(app.valid_processs):
-#         return f"Invalid process number. Must be between 1 and {len(app.valid_processs)}"
-    
-#     process = app.valid_processs[process_number - 1]
-    
-#     # Set each block and parameter according to the process
-#     for pos, (block, param) in enumerate(process):
-#         app.blocks[pos] = block
-#         app.sub_params[pos] = param
-    
-#     app.update_display() # Bad practice to expose app internals TODO Fix
-    
-#     return f"Set to Process {process_number}: {list(zip(app.blocks, app.sub_params))}"
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PCB Assembly Orchestrator FastMCP Server")
     parser.add_argument("--transport", type=str, default="stdio", choices=["stdio", "http"], 
@@ -203,17 +159,13 @@ if __name__ == "__main__":
     
     print(f"Transport: {args.transport}")
     
-    # GUI
     gui_thread = threading.Thread(target=start_gui_thread, daemon=True)
     gui_thread.start()
     time.sleep(1)
         
-    # Run the MCP server
     if args.transport == "http":
         print(f"Starting HTTP server on {args.host}:{args.port}")
-        # mcp.run(transport="streamable-http", host=args.host, port=args.port)
         mcp.run(transport="streamable-http")
-        
     else:
         print("Starting stdio server")
         mcp.run(transport="stdio")
