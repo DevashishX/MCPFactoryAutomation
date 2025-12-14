@@ -1,0 +1,39 @@
+# PCB Assembly Orchestrator LangGraph System
+# Requirements file for the two-agent RAG and orchestrator control system
+
+# Core LangChain dependencies
+langchain
+langchain-core
+langchain-community
+langchain-text-splitters
+
+# Ollama integration
+langchain-ollama
+
+# Vector database
+langchain-chroma
+chromadb
+
+# LangGraph for agent orchestration
+langgraph
+langgraph-checkpoint
+
+# LangSmith for tracing (optional)
+langsmith
+
+# API server dependencies
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+
+# Document loading and processing
+unstructured
+markdown
+
+# Existing dependencies (already in project)
+customtkinter
+mcp
+
+# Utility dependencies
+python-dotenv

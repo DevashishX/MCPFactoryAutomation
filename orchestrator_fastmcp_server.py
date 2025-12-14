@@ -9,6 +9,7 @@ import threading
 import time
 from typing import List, Tuple
 from mcp.server.fastmcp import FastMCP
+import argparse
 
 # Import the GUI application
 from orchestrator_gui import OrchestratorApp
@@ -17,7 +18,7 @@ from orchestrator_gui import OrchestratorApp
 app_instance = None
 
 # Create FastMCP server
-mcp = FastMCP("orchestrator")
+mcp = FastMCP("PCB process Orchestrator", host="127.0.0.1", port=8000)
 
 def start_gui_thread():
     """Start the GUI in a separate thread"""
@@ -26,9 +27,9 @@ def start_gui_thread():
     app_instance.run()
 
 # Start GUI in background thread
-gui_thread = threading.Thread(target=start_gui_thread, daemon=True)
-gui_thread.start()
-time.sleep(1)  # Wait for app to initialize
+# gui_thread = threading.Thread(target=start_gui_thread, daemon=True)
+# gui_thread.start()
+# time.sleep(1)  # Wait for app to initialize
 
 def ensure_app() -> OrchestratorApp:
     """Ensure app is initialized and return it"""
@@ -73,55 +74,73 @@ def set_sub_param_at_position(pos: int, sub_param: str) -> str:
     return app.set_sub_param_at_position(pos, sub_param)
 
 @mcp.tool()
-def get_current_sequence() -> str:
+def get_current_process() -> str:
     """
-    Get the current state of the orchestrator sequence.
+    Get the current state of the orchestrator process.
     
     Returns:
-        Current sequence with all blocks and parameters, plus validation status
+        Current process with all blocks and parameters, plus validation status
     """
     app = ensure_app()
-    return app.get_current_sequence()
+    return app.get_current_process()
 
 @mcp.tool()
-def execute_sequence() -> str:
+def execute_process() -> str:
     """
-    Execute the current sequence if it's valid.
+    Execute the current process if it's valid.
     
     Returns:
         Execution status message indicating success or failure
     """
     app = ensure_app()
-    return app.post_execute_sequence()
+    return app.post_execute_process()
 
 @mcp.tool()
-def get_current_pattern_validity() -> str:
+def get_current_process_validity() -> str:
     """
-    Check if the current pattern is valid.
+    Check if the current process is valid.
     
     Returns:
-        Validation status and which pattern it matches (if valid)
+        Validation status and which process it matches (if valid)
     """
     app = ensure_app()
-    return app.get_current_pattern_validity()
+    return app.get_current_process_validity()
 
 @mcp.tool()
-def get_valid_patterns() -> str:
+def get_valid_processes() -> str:
     """
-    Get all valid sequence patterns that the orchestrator accepts.
+    Get all valid process processs that the orchestrator accepts.
     
     Returns:
-        Formatted string listing all 3 valid patterns with their steps
+        Formatted string listing all 3 valid processs with their steps
     """
     app = ensure_app()
-    patterns = app.get_valid_patterns()
+    processes = app.get_valid_processes()
     
-    result_lines = ["Valid Patterns:\n"]
+    result_lines = ["Valid Processes:\n"]
     
-    for pattern_idx, pattern in enumerate(patterns, 1):
-        result_lines.append(f"\nPattern {pattern_idx}:")
-        for step_idx, (block, param) in enumerate(pattern, 1):
+    for process_idx, process in enumerate(processes, 1):
+        result_lines.append(f"\nProcess {process_idx}:")
+        for step_idx, (block, param) in enumerate(process, 1):
             result_lines.append(f"  Step {step_idx}: {block} ({param})")
+    
+    return "\n".join(result_lines)
+
+@mcp.tool()
+def get_possible_blocks_sub_params() -> str:
+    """
+    Use in worst case, Get all possible block types and their valid sub-parameters.
+    
+    Returns:
+        Formatted string listing all block types and their sub-parameters
+    """
+    app = ensure_app()
+    blocks_sub_params = app.get_possible_blocks_sub_params()
+    
+    result_lines = ["Possible Blocks and Sub-Parameters:\n"]
+    
+    for block, params in blocks_sub_params.items():
+        result_lines.append(f"{block}: {params}")
     
     return "\n".join(result_lines)
 
@@ -145,32 +164,56 @@ def get_block_sub_params(block_type: str) -> str:
     params = app.block_sub_params[block_type]
     return f"Valid sub-parameters for '{block_type}': {params}"
 
-@mcp.tool()
-def set_pattern(pattern_number: int) -> str:
-    """
-    Set the orchestrator to a specific valid pattern.
+# @mcp.tool()
+# def set_process(process_number: int) -> str:
+#     """
+#     Set the orchestrator to a specific valid process.
     
-    Args:
-        pattern_number: Pattern number (1, 2, or 3)
+#     Args:
+#         process_number: Process number (1 to 9)
     
-    Returns:
-        Status message indicating the pattern was set
-    """
-    app = ensure_app()
+#     Returns:
+#         Status message indicating the process was set
+#     """
+#     app = ensure_app()
     
-    if not 1 <= pattern_number <= len(app.valid_patterns):
-        return f"Invalid pattern number. Must be between 1 and {len(app.valid_patterns)}"
+#     if not 1 <= process_number <= len(app.valid_processs):
+#         return f"Invalid process number. Must be between 1 and {len(app.valid_processs)}"
     
-    pattern = app.valid_patterns[pattern_number - 1]
+#     process = app.valid_processs[process_number - 1]
     
-    # Set each block and parameter according to the pattern
-    for pos, (block, param) in enumerate(pattern):
-        app.blocks[pos] = block
-        app.sub_params[pos] = param
+#     # Set each block and parameter according to the process
+#     for pos, (block, param) in enumerate(process):
+#         app.blocks[pos] = block
+#         app.sub_params[pos] = param
     
-    app.update_display()
+#     app.update_display() # Bad practice to expose app internals TODO Fix
     
-    return f"Set to Pattern {pattern_number}: {list(zip(app.blocks, app.sub_params))}"
+#     return f"Set to Process {process_number}: {list(zip(app.blocks, app.sub_params))}"
 
 if __name__ == "__main__":
-    mcp.run()
+    parser = argparse.ArgumentParser(description="PCB Assembly Orchestrator FastMCP Server")
+    parser.add_argument("--transport", type=str, default="stdio", choices=["stdio", "http"], 
+                       help="Transport protocol (default: stdio)")
+    parser.add_argument("--host", type=str, default="127.0.0.1", 
+                       help="HTTP host (default: 127.0.0.1)")
+    parser.add_argument("--port", type=int, default=8000, 
+                       help="HTTP port (default: 8000)")
+    args = parser.parse_args()
+    
+    print(f"Transport: {args.transport}")
+    
+    # GUI
+    gui_thread = threading.Thread(target=start_gui_thread, daemon=True)
+    gui_thread.start()
+    time.sleep(1)
+        
+    # Run the MCP server
+    if args.transport == "http":
+        print(f"Starting HTTP server on {args.host}:{args.port}")
+        # mcp.run(transport="streamable-http", host=args.host, port=args.port)
+        mcp.run(transport="streamable-http")
+        
+    else:
+        print("Starting stdio server")
+        mcp.run(transport="stdio")

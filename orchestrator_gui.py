@@ -25,7 +25,7 @@ class OrchestratorApp:
             'Functional Testing': ['in-circuit', 'functional', 'boundary-scan']
         }
         
-        # Define multiple valid patterns as list of (block, sub_param) tuples
+        # Define multiple valid processs as list of (block, sub_param) tuples
         self.valid_processes = VALID_PROCESSES
         
         # Color options - Map each block letter to a color
@@ -177,14 +177,20 @@ class OrchestratorApp:
         self._populate_valid_processes()
     
     def _populate_valid_processes(self):
-        """Populate the textbox with valid sequence patterns"""
+        """Populate the textbox with valid sequence processs"""
         self.sequences_textbox.delete("1.0", "end")
-        for pattern_idx, pattern in enumerate(self.valid_processes, 1):
-            sequence_text = f"Process {pattern_idx}:\n"
-            for step_idx, (block, param) in enumerate(pattern, 1):
-                sequence_text += f"  Step {step_idx}: {block} ({param})\n"
-            sequence_text += "\n"
-            self.sequences_textbox.insert("end", sequence_text)
+        # for process_idx, process in enumerate(self.valid_processes, 1):
+        #     sequence_text = f"Process {process_idx}:\n"
+        #     for step_idx, (block, param) in enumerate(process, 1):
+        #         sequence_text += f"  Step {step_idx}: {block} ({param})\n"
+        #     sequence_text += "\n"
+        #     self.sequences_textbox.insert("end", sequence_text)
+        # read D:\DevMAT\documents\all_processes_overview.txt and display its content
+        with open("D:/DevMAT/documents/all_processes_overview.txt", "r") as f:
+            content = f.read()
+            content = content.replace("*", "")
+            
+            self.sequences_textbox.insert("end", content)
         self.sequences_textbox.configure(state="disabled")
         
     def update_display(self):
@@ -219,22 +225,22 @@ class OrchestratorApp:
         # Clear execution status when sequence changes
         self.execution_status_label.configure(text="", text_color="gray")
         
-        self.check_pattern()
+        self.check_process()
         
-    def check_pattern(self) -> str:
-        """Check if current sequence matches any of the valid patterns"""
+    def check_process(self) -> str:
+        """Check if current sequence matches any of the valid processs"""
         # Create current sequence as list of tuples
         current_sequence = [(self.blocks[i], self.sub_params[i]) for i in range(5)]
         
-        # Check if current sequence matches any valid pattern
-        for pattern_idx, pattern in enumerate(self.valid_processes, 1):
-            if current_sequence == pattern:
+        # Check if current sequence matches any valid process
+        for process_idx, process in enumerate(self.valid_processes, 1):
+            if current_sequence == process:
                 self.status_label.configure(
-                    text=f"✓ Valid Combination! (Pattern {pattern_idx})",
+                    text=f"✓ Valid Combination! (Process {process_idx})",
                     text_color="#05b044"
                 )
                 self.execute_button.configure(state="normal")
-                return f"Valid Combination (Pattern {pattern_idx})"
+                return f"Valid Combination (Process {process_idx})"
         
         self.status_label.configure(text="Status: Invalid sequence",
                                    text_color="gray")
@@ -245,14 +251,14 @@ class OrchestratorApp:
         """Execute the current valid sequence"""
         current_sequence = [(self.blocks[i], self.sub_params[i]) for i in range(5)]
         
-        # Check if sequence matches any valid pattern
-        for pattern_idx, pattern in enumerate(self.valid_processes, 1):
-            if current_sequence == pattern:
+        # Check if sequence matches any valid process
+        for process_idx, process in enumerate(self.valid_processes, 1):
+            if current_sequence == process:
                 self.execution_status_label.configure(
-                    text=f"✓ Sequence Executed Successfully! (Pattern {pattern_idx})",
+                    text=f"✓ Sequence Executed Successfully! (Process {process_idx})",
                     text_color="#22c55e"
                 )
-                return f"Executed sequence: {current_sequence} (Pattern {pattern_idx})"
+                return f"Executed sequence: {current_sequence} (Process {process_idx})"
         
         self.execution_status_label.configure(
             text="✗ Cannot execute invalid sequence",
@@ -288,21 +294,25 @@ class OrchestratorApp:
             return f"Invalid sub-parameter '{sub_param}' for block type '{block_type}'. Valid options: {valid_sub_params}"
         return "Invalid position"
     
-    def get_current_sequence(self) -> str:
-        status = self.check_pattern()
-        current_sequence = list(zip(self.blocks, self.sub_params))
-        return f"Current sequence: {current_sequence}. Status: {status}"
+    def get_possible_blocks_sub_params(self) -> dict:
+        """Return available blocks and their sub-parameters"""
+        return self.block_sub_params
     
-    def post_execute_sequence(self) -> str:
-        """execute the current sequence via MCP"""
+    def get_current_process(self) -> str:
+        status = self.check_process()
+        current_sequence = list(zip(self.blocks, self.sub_params))
+        return f"Current process: {current_sequence}. Status: {status}"
+    
+    def post_execute_process(self) -> str:
+        """execute the current process via MCP"""
         return self.execute()
     
-    def get_current_pattern_validity(self) -> str:
-        """Return whether the current pattern is valid or not"""
-        return self.check_pattern()
+    def get_current_process_validity(self) -> str:
+        """Return whether the current process is valid or not"""
+        return self.check_process()
     
     def get_valid_processes(self) -> List[List[Tuple[str, str]]]:
-        """Return the list of valid patterns"""
+        """Return the list of valid processes"""
         return self.valid_processes
     
     # End of MCP integration methods #
