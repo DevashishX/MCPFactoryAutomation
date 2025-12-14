@@ -20,21 +20,21 @@ def ensure_app() -> OrchestratorApp:
         raise RuntimeError("Application not initialized")
     return app_instance
 
-@mcp.tool()
-def set_block_at_position(pos: int, block_type: str) -> str:
-    """
-    Set a specific block type at a given position.
+# @mcp.tool()
+# def set_block_at_position(pos: int, block_type: str) -> str:
+#     """
+#     Set a specific block type at a given position.
     
-    Args:
-        pos: Position (0-4) in the sequence
-        block_type: One of: 'Solder Paste Application', 'Component Placement', 
-                    'Soldering', 'Optical Inspection', 'Testing'
+#     Args:
+#         pos: Position (0-4) in the sequence
+#         block_type: One of: 'Solder Paste Application', 'Component Placement', 
+#                     'Soldering', 'Optical Inspection', 'Testing'
     
-    Returns:
-        Status message with current sequence
-    """
-    app = ensure_app()
-    return app.set_block_at_position(pos, block_type)
+#     Returns:
+#         Status message with current sequence
+#     """
+#     app = ensure_app()
+#     return app.set_block_at_position(pos, block_type)
 
 @mcp.tool()
 def set_sub_param_at_position(pos: int, sub_param: str) -> str:
@@ -55,6 +55,26 @@ def set_sub_param_at_position(pos: int, sub_param: str) -> str:
     """
     app = ensure_app()
     return app.set_sub_param_at_position(pos, sub_param)
+
+@mcp.tool()
+def set_whole_process(sub_params_sequence: List[str]) -> str:
+    """
+    Set the entire process sequence with sub-parameters.
+    
+    Args:
+        sub_params_sequence: List of 5 sub-parameters for each block in order.
+    
+    Returns:
+        Status message with current sequence
+    """
+    app = ensure_app()
+    try:
+        for idx, sub_param in enumerate(sub_params_sequence):
+            app.set_sub_param_at_position(idx, sub_param)
+        return app.get_current_process()
+    except Exception as e:
+        return f"Error setting process: {str(e)}"
+        
 
 @mcp.tool()
 def get_current_process() -> str:

@@ -19,7 +19,8 @@ class ProcessRAG:
     def __init__(
         self,
         # documents_dir: str = "documents",
-        documents_dir: str = os.getenv("DOCUMENTS_DIR", "documents"),
+        # documents_dir: str = os.getenv("DOCUMENTS_DIR", "documents"),
+        documents_dir: str = Path("./documents").resolve(),        
         ollama_base_url: str = "http://localhost:11434",
         # embedding_model: str = "qwen3-embedding:4b",
         embedding_model: str = "qwen3-embedding:0.6b",

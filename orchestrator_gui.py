@@ -178,7 +178,7 @@ class OrchestratorApp:
         #         sequence_text += f"  Step {step_idx}: {block} ({param})\n"
         #     sequence_text += "\n"
         #     self.sequences_textbox.insert("end", sequence_text)
-        with open("D:/MCPFactoryAutomation/documents/all_processes_overview.txt", "r") as f:
+        with open("./documents/all_processes_overview.txt", "r") as f:
             content = f.read()
             content = content.replace("*", "")
             
