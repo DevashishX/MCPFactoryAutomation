@@ -1,5 +1,4 @@
-# DevMAT
-Devs Manufacturing Automation Technology / Devs FertigungsAutomatisierungsTechnologie
+# MCPFactoryAutomation
 
 ## PCB Assembly Orchestrator
 
@@ -10,151 +9,87 @@ A visual orchestrator for PCB assembly processes with MCP (Model Context Protoco
 - Visual workflow designer for PCB assembly sequences
 - 5-step process orchestration with configurable parameters
 - Real-time validation against predefined patterns
-- MCP server integration for Claude Desktop interaction
-- Two MCP implementations: standard and FastMCP
-
-## Prerequisites
-
-- Python 3.8 or higher
-- customtkinter
-- mcp (Model Context Protocol library)
-- FastMCP (for the FastMCP server variant)
+- RAG (Retrieval-Augmented Generation) system for process documentation
+- MCP server integration via HTTP (recommended) or stdio
+- FastMCP implementation for both orchestrator and RAG servers
 
 ## Installation
 
-1. **Clone or navigate to the project directory:**
+1. Navigate to the project directory:
    ```bash
-   cd path/to/DevMAT
+   cd path/to/MCPFactoryAutomation
    ```
 
-2. **Set up Python environment:**
+2. Install dependencies:
    ```bash
-   python -m venv .conda
-   .conda/Scripts/activate
+   pip install -r requirements.txt
    ```
 
-3. **Install dependencies:**
-   ```bash
-   pip install customtkinter mcp fastmcp
-   ```
+3. (Optional) Copy `.env.example` to `.env` and configure Ollama settings for RAG
 
-## Running the GUI
+## Running the Servers
 
-Run the orchestrator GUI standalone:
-
+### Start Both Servers (Recommended)
 ```bash
-python orchestrator_gui.py
+start_servers.sh
 ```
 
-## MCP Server Setup
+```bash
+start_servers.bat
+```
+This starts both the orchestrator (port 8000) and RAG server (port 8001) via HTTP.
 
-This project provides two MCP server implementations for Claude Desktop integration:
+### Run Individually
+```bash
+# Orchestrator server (HTTP)
+python orchestrator_fastmcp_server.py --transport http --port 8000
 
-### Standard MCP Server
-Located in `orchestrator_mcp_server.py`
+# RAG server (HTTP)
+python rag_fastmcp_server.py --transport http --port 8001
 
-### FastMCP Server  
-Located in `orchestrator_fastmcp_server.py` (recommended)
+# Or with stdio (alternative)
+python orchestrator_fastmcp_server.py --transport stdio
+python rag_fastmcp_server.py --transport stdio
+```
 
 ## Claude Desktop Configuration
 
-Add the following to your Claude Desktop config file:
+Add to your config file: `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
 
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`  
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`  
-**Linux:** `~/.config/Claude/claude_desktop_config.json`
-
-### Configuration Example
-
+### HTTP Configuration (Recommended)
 ```json
 {
   "mcpServers": {
-    "orchestrator": {
-      "command": "/path/to/DevMAT/.conda/python.exe",
-      "args": [
-        "/path/to/DevMAT/orchestrator_mcp_server.py"
-      ],
-      "cwd": "/path/to/DevMAT"
+    "pcb-orchestrator": {
+      "url": "http://127.0.0.1:8000/mcp"
     },
-    "orchestrator-fastmcp": {
-      "command": "/path/to/DevMAT/.conda/python.exe",
-      "args": [
-        "/path/to/DevMAT/orchestrator_fastmcp_server.py"
-      ],
-      "cwd": "/path/to/DevMAT"
+    "pcb-rag": {
+      "url": "http://127.0.0.1:8001/mcp"
     }
   }
 }
 ```
 
-**Note:** You can enable one or both servers. Replace `/path/to/DevMAT` with your actual project path.
-
 ## Available MCP Tools
 
-Once configured, Claude can interact with the orchestrator using these tools:
-
+### Orchestrator Tools
 - `set_block_at_position` - Set block type at a specific position
 - `set_sub_param_at_position` - Configure sub-parameters
-- `get_current_sequence` - View current configuration
-- `execute_sequence` - Execute valid sequences
-- `get_current_pattern_validity` - Check sequence validity
-- `get_valid_patterns` - List all valid patterns
+- `get_current_process` - View current configuration
+- `execute_process` - Execute valid sequences
+- `get_current_process_validity` - Check sequence validity
+- `get_valid_processes` - List all valid processes
 - `get_block_sub_params` - Query valid parameters for blocks
-- `set_pattern` - Quickly set to a predefined valid pattern
+- `get_possible_blocks_sub_params` - Get all blocks and their parameters
 
-## Valid Process Processes
+### RAG Tools
+- `get_query_rag` - Search process documentation with natural language queries
 
-The orchestrator supports three predefined valid processes:
+## Valid Processes
 
-**Pattern 1:** Standard Lead-Free Process
-- Solder Paste Application (lead-free)
-- Component Placement (high-speed)
-- Soldering (235C)
-- Optical Inspection (2D)
-- Functional Testing (in-circuit)
-
-**Pattern 2:** High-Precision Leaded Process
-- Solder Paste Application (leaded)
-- Component Placement (high-precision)
-- Soldering (245C)
-- Optical Inspection (3D)
-- Functional Testing (functional)
-
-**Pattern 3:** Low-Temperature Flexible Process
-- Solder Paste Application (low-temp)
-- Component Placement (flexible)
-- Soldering (260C)
-- Optical Inspection (Automated)
-- Functional Testing (boundary-scan)
-
-## Usage with Claude
-
-After setup, restart Claude Desktop. You can ask Claude to:
-- "Show me the current orchestrator sequence"
-- "Set the orchestrator to pattern 2"
-- "Change step 3 to use 260C soldering"
-- "Execute the current sequence"
-- "What are the valid patterns?"
+The orchestrator supports predefined valid processes in file [processes.py](./processes.py)
 
 
-## Project Structure
+
 
 ```
-DevMAT/
-─ orchestrator_gui.py              # Main GUI application
-─ orchestrator_mcp_server.py       # Standard MCP server
-─ orchestrator_fastmcp_server.py   # FastMCP server implementation
-─ README.md                        # README
-─ .conda/                          # Python virtual environment (make your own)
-```
-
-## Troubleshooting
-
-- Ensure Python paths in config are correct and use forward slashes or escaped backslashes
-- Verify all dependencies are installed in the correct Python environment
-- Check that the working directory (`cwd`) points to the DevMAT folder
-- Restart Claude Desktop after configuration changes
-
-## Feel free to contribute to the project
-- Create an issue 
-- Just open a pull request
