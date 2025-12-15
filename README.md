@@ -88,8 +88,3 @@ Add to your config file: `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
 ## Valid Processes
 
 The orchestrator supports predefined valid processes in file [processes.py](./processes.py)
-
-
-
-
-```
