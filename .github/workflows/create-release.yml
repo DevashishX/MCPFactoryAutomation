@@ -1,0 +1,28 @@
+name: Create Release
+run-name: Create a new release on tag push
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+jobs:
+  create-release:
+    runs-on: ubuntu-slim
+    steps:
+        - name: Check out repository code
+          uses: actions/checkout@v5
+        # - name: Zip files
+        #   run: |
+        #     zip -r release-${{ github.ref_name }}.zip .
+        # - name: GH Release
+        #   uses: softprops/action-gh-release@v2.5.0
+        #   with:
+        - name: Create release
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            tag: ${{ github.ref_name }}
+          run: |
+                gh release create "$tag" \
+                    --repo="$GITHUB_REPOSITORY" \
+                    --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
+                    --generate-notes
+     
