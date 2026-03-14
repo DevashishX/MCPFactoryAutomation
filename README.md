@@ -1,3 +1,5 @@
+Note: The original project has been moved to a private repository for commericial use
+
 # MCPFactoryAutomation
 
 ## PCB Assembly Orchestrator
